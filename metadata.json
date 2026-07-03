@@ -1,0 +1,6 @@
+{
+  "name": "Booth Allocation Search",
+  "description": "Search and filter exhibition booth allocations by category, project name, or owner.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
