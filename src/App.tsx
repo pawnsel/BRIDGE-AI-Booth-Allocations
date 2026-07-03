@@ -1,16 +1,17 @@
 import React, { useState, useMemo } from 'react';
-import { Search, MapPin, ChevronRight, ChevronDown, Activity, Stethoscope, MonitorSmartphone, BrainCircuit, Download } from 'lucide-react';
-import { MOCK_PROJECTS, CATEGORIES } from './data';
+import { Search, MapPin, ChevronRight, ChevronDown, Activity, Stethoscope, MonitorSmartphone, BrainCircuit, Download, X, Mail } from 'lucide-react';
+import { MOCK_PROJECTS, CATEGORIES, Project } from './data';
 
 export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   const filteredProjects = useMemo(() => {
     return MOCK_PROJECTS.filter(project => {
       const matchesSearch = 
         project.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.owners.some(owner => owner.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        project.owners.some(owner => owner.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
         project.booth.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesCategory = selectedCategory === 'All' || project.category === selectedCategory;
@@ -138,7 +139,7 @@ export default function App() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
                 {filteredProjects.map((project) => (
-                  <tr key={project.id} className="hover:bg-gray-50/80 transition-colors group cursor-pointer">
+                  <tr key={project.id} className="hover:bg-gray-50/80 transition-colors group cursor-pointer" onClick={() => setSelectedProject(project)}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-2">
                         <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-semibold bg-white text-gray-800 border border-gray-200 shadow-sm min-w-[3rem]">
@@ -158,7 +159,7 @@ export default function App() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-600 line-clamp-2">
-                        {project.owners.join(', ')}
+                        {project.owners.map(o => o.fullName).join(', ')}
                       </div>
                     </td>
                      <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
@@ -199,6 +200,61 @@ export default function App() {
           Showing {filteredProjects.length} result{filteredProjects.length !== 1 ? 's' : ''}
         </div>
       </div>
+
+      {/* Modal Overlay */}
+      {selectedProject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex items-center space-x-3">
+                  <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-bold bg-gray-100 text-gray-800">
+                    Booth {selectedProject.booth}
+                  </span>
+                  <span className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 cursor-pointer transition-colors">
+                    <MapPin className="w-4 h-4 mr-1" /> View on map
+                  </span>
+                </div>
+                <button onClick={() => setSelectedProject(null)} className="text-gray-400 hover:text-gray-600 transition-colors bg-gray-100 hover:bg-gray-200 rounded-full p-2">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">{selectedProject.projectName}</h2>
+              <div className="mb-8">
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
+                    ${selectedProject.category === CATEGORIES.A ? 'bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-700/10' : ''}
+                    ${selectedProject.category === CATEGORIES.B ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/10' : ''}
+                    ${selectedProject.category === CATEGORIES.C ? 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-700/10' : ''}
+                    ${selectedProject.category === CATEGORIES.D ? 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-700/10' : ''}
+                  `}>
+                  {selectedProject.category}
+                </span>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Project Owners</h3>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {selectedProject.owners.map((owner, idx) => (
+                    <div key={idx} className="flex items-start space-x-4 p-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition-colors">
+                      <div className="flex-shrink-0 w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg shadow-inner">
+                        {owner.fullName.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-gray-900 truncate" title={owner.fullName}>{owner.fullName}</div>
+                        <div className="flex items-center text-sm text-gray-500 mt-1 truncate" title={owner.email}>
+                          <Mail className="w-4 h-4 mr-1.5 flex-shrink-0" />
+                          <span className="truncate">{owner.email}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
